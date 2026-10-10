@@ -100,14 +100,24 @@ Search may include non-recipe posts. Empty results may mean no matches, a change
 an access challenge. Missing/malformed/incomplete structured data gives an actionable error.
 No JavaScript execution, challenge/CAPTCHA solving, impersonation, login, restriction bypass,
 retries or bulk crawling. Site content changes can break discovery/parsing. Proxy environment
-variables are not supported. Compressed responses are rejected if a server ignores the requested
-identity encoding. HTML is decoded as UTF-8, matching the inspected site.
+variables and NAT64-only/IPv6-special-service deployments are not supported. Compressed responses
+are rejected if a server ignores the requested identity encoding. HTML is decoded as UTF-8, matching the inspected site.
 
 Network safeguards: HTTPS only on the provider's exact registered hosts (`www.recipetineats.com`
 and `recipetineats.com`); no credentials/non-default ports. Every redirect is validated before its
 next request, with at most 3 redirects. All DNS answers must be public, and a validated address is
-pinned for the socket while retaining hostname-based TLS verification. One 10-second deadline
-covers DNS, redirects, headers and body; responses are limited to 2 MiB. DNS lookups cannot be
+pinned for the socket while retaining hostname-based TLS verification. IPv4-mapped IPv6 uses the
+IPv4 policy. IPv6 is conservatively limited to `2000::/3`, excluding protocol-assignment,
+documentation, transition, former 6bone and special-service blocks within that range. Thus local-use
+NAT64, site-local, dummy/SRv6 prefixes and reserved/future space outside the envelope are refused;
+the IP library's residual `unicast` classification is not proof of public IPv6. Even some globally
+reachable translation/special-service addresses are deliberately unsupported. This static policy
+requires maintenance as allocations change and does not promise actual routability.
+The policy was checked against the [IANA IPv6 address-space registry](https://www.iana.org/assignments/ipv6-address-space/)
+and [special-purpose registry](https://www.iana.org/assignments/iana-ipv6-special-registry/) on
+2026-10-10. A mixed public/refused DNS answer is rejected entirely before transport, including
+after redirects; there is no address filtering/fallback. One 10-second deadline covers DNS,
+redirects, headers and body; responses are limited to 2 MiB. DNS lookups cannot be
 cancelled at OS level, but late answers are ignored and cannot start a request after timeout.
 No fallback to private addresses or another host. No guarantee of connectivity: an unreachable
 first public address produces an error rather than retrying all DNS answers.

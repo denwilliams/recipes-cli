@@ -1,5 +1,6 @@
 import { lookup } from 'node:dns/promises';
 import { request } from 'node:https';
+import { isIP } from 'node:net';
 import ipaddr from 'ipaddr.js';
 import { RecipesError } from './errors.js';
 
@@ -32,10 +33,30 @@ export function validateUrl(input: string, hosts: readonly string[]): URL {
   return url;
 }
 
+// Conservative IPv6 policy, not a claim that the library's residual 'unicast'
+// category means public. IANA IPv6 Address Space and Special-Purpose registries,
+// inspected 2026-10-10: ordinary global allocations are within 2000::/3.
+// Block special/transition/documentation space inside that envelope as well.
+// Some globally reachable special services are deliberately unsupported.
+const globalV6 = ipaddr.IPv6.parseCIDR('2000::/3');
+const excludedV6 = [
+  '2001::/23',       // Protocol assignments, including Teredo, benchmarking, ORCHID
+  '2001:db8::/32',   // Documentation
+  '2002::/16',       // 6to4 (can encapsulate non-public IPv4)
+  '2620:4f:8000::/48', // Special-purpose AS112 service
+  '3ffe::/16',       // Former 6bone allocation, returned/reserved
+  '3fff::/20',       // Documentation (RFC 9637)
+].map((cidr) => ipaddr.IPv6.parseCIDR(cidr));
+
 export function isPublicAddress(address: string): boolean {
   try {
-    // process converts IPv4-mapped IPv6 to IPv4 before range classification.
-    return !address.includes('%') && ipaddr.process(address).range() === 'unicast';
+    if (address.includes('%') || !isIP(address)) return false;
+    // process converts IPv4-mapped IPv6 to IPv4; apply the same IPv4 exclusions.
+    const parsed = ipaddr.process(address);
+    if (parsed instanceof ipaddr.IPv4) return parsed.range() === 'unicast';
+    // This also excludes local-use NAT64, site-local, dummy/SRv6 prefixes,
+    // private/link-local/multicast and all future/reserved space outside 2000::/3.
+    return parsed.match(globalV6) && !excludedV6.some((cidr) => parsed.match(cidr));
   } catch { return false; }
 }
 

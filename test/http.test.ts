@@ -152,3 +152,66 @@ test('native HTTPS adapter propagates request errors without sockets', async () 
   const requestFn = (() => fake) as typeof import('node:https').request;
   await assert.rejects(createHttpsTransport(requestFn)(new URL(url), { address: '93.184.216.34', family: 4 }, new AbortController().signal), /TLS failure/);
 });
+
+// QA reproduction: a residual library category must never permit special/local IPv6.
+// Each answer is tested initially, mixed with public DNS, and after a supported redirect.
+const nonPublicV6 = [
+  '64:ff9b:1::a00:1', // Local-use NAT64, potentially translating to private IPv4
+  'fec0::1',          // Deprecated site-local
+  '3fff::1',          // Documentation
+  '100:0:0:1::1',     // Dummy IPv6 prefix
+  '5f00::1',          // Non-globally-reachable SRv6 SID
+];
+for (const address of nonPublicV6) {
+  test(`non-public IPv6 ${address} is classified as refused`, () => {
+    assert.equal(isPublicAddress(address), false);
+  });
+  for (const mixed of [false, true]) {
+    test(`${mixed ? 'mixed' : 'initial'} DNS with ${address} rejects before any transport`, async () => {
+      let opens = 0;
+      const addresses = [{ address, family: 6 }, ...(mixed ? await resolvePublic() : [])];
+      await assert.rejects(createFetcher({ resolve: async () => addresses, open: async () => { opens++; return response(); } })(url, hosts), code('NETWORK'));
+      assert.equal(opens, 0);
+    });
+  }
+  test(`redirect DNS with ${address} rejects before next transport`, async () => {
+    let lookups = 0, opens = 0, closed = false;
+    const fetchPage = createFetcher({
+      resolve: async () => ++lookups === 1 ? resolvePublic() : [{ address, family: 6 }],
+      open: async () => {
+        opens++;
+        const res = response(302, { location: '/final/' });
+        res.close = () => { closed = true; }; return res;
+      },
+    });
+    await assert.rejects(fetchPage(url, hosts), code('NETWORK'));
+    assert.equal(lookups, 2); assert.equal(opens, 1); assert.equal(closed, true);
+  });
+}
+test('conservative IPv6 envelope, special blocks, mapped IPv4 and strict literal boundaries', () => {
+  for (const address of [
+    '1fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', '4000::', '8000::1',
+    '2001::1', '2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff', '2001:db8::',
+    '2001:db8:ffff:ffff:ffff:ffff:ffff:ffff', '2002::1', '2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+    '2620:4f:8000::1', '3ffe::1', '3fff:fff:ffff:ffff:ffff:ffff:ffff:ffff',
+    '64:ff9b::808:808', '64:ff9b:1:ffff:ffff:ffff:ffff:ffff', 'feff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+    '::ffff:10.0.0.1', '::ffff:192.168.1.1', '::ffff:169.254.169.254',
+    '0x08080808', '134744072', '010.0.0.1', '8.8.8',
+  ]) assert.equal(isPublicAddress(address), false, address);
+  for (const address of [
+    '8.8.8.8', '93.184.216.34', '::ffff:8.8.8.8', '::ffff:808:808',
+    '2001:4860:4860::8888', '2606:4700::1111', '2a00:1450:4001::1',
+    '2001:200::1', '2001:db7:ffff:ffff:ffff:ffff:ffff:ffff', '2001:db9::1',
+    '2620:4f:7fff:ffff:ffff:ffff:ffff:ffff', '2620:4f:8001::1',
+    '3fff:1000::1', '3ffd:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+  ]) assert.equal(isPublicAddress(address), true, address);
+});
+test('public IPv6 and mapped public IPv4 still reach pinned transport', async () => {
+  for (const address of ['2606:4700::1111', '::ffff:8.8.8.8']) {
+    let opens = 0;
+    const fetchPage = createFetcher({ resolve: async () => [{ address, family: 6 }], open: async (_url, pinned) => {
+      opens++; assert.equal(pinned.address, address); return response();
+    } });
+    assert.equal((await fetchPage(url, hosts)).url, url); assert.equal(opens, 1);
+  }
+});
