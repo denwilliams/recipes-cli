@@ -1,0 +1,7 @@
+# Offline fixture provenance
+
+Inspected and reduced on 2026-10-10:
+- `https://www.recipetineats.com/butter-chicken/`: the Recipe JSON-LD node inside Yoast's `@graph`. Kept fields used by the parser, removed reviews, images and unrelated nodes. Recipe by Nagi / RecipeTin Eats.
+- `https://www.recipetineats.com/?s=chicken`: first two `article .entry-title-link` elements; removed everything else. Real page had 20 candidate posts and pagination.
+
+These are static offline test data, not a promise of stable search ordering or continued availability. Recipe/site content belongs to its source; the repository MIT license does not relicense third-party recipes. Other variants in tests are synthetic.
