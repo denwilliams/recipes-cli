@@ -107,14 +107,18 @@ Network safeguards: HTTPS only on the provider's exact registered hosts (`www.re
 and `recipetineats.com`); no credentials/non-default ports. Every redirect is validated before its
 next request, with at most 3 redirects. All DNS answers must be public, and a validated address is
 pinned for the socket while retaining hostname-based TLS verification. IPv4-mapped IPv6 uses the
-IPv4 policy. IPv6 is conservatively limited to `2000::/3`, excluding protocol-assignment,
-documentation, transition, former 6bone and special-service blocks within that range. Thus local-use
-NAT64, site-local, dummy/SRv6 prefixes and reserved/future space outside the envelope are refused;
-the IP library's residual `unicast` classification is not proof of public IPv6. Even some globally
-reachable translation/special-service addresses are deliberately unsupported. This static policy
-requires maintenance as allocations change and does not promise actual routability.
-The policy was checked against the [IANA IPv6 address-space registry](https://www.iana.org/assignments/ipv6-address-space/)
-and [special-purpose registry](https://www.iana.org/assignments/iana-ipv6-special-registry/) on
+IPv4 policy. IPv6 must match an explicitly **ALLOCATED regional-registry prefix** in the static
+[IANA Global Unicast snapshot](https://www.iana.org/assignments/ipv6-unicast-address-assignments/).
+The broad `2000::/3` envelope is NOT an allowlist: IANA-reserved/unlisted gaps inside it are refused,
+as are reserved/future allocations outside it. Special-purpose exclusions remain (including
+protocol assignments, documentation, transition, former 6bone and special-service blocks).
+Local-use NAT64, site-local, dummy/SRv6 and mapped-private addresses therefore cannot reach the
+transport. Neither a library's residual `unicast` label nor presence in `2000::/3` proves public use.
+Even some globally reachable translation/special-service addresses are deliberately unsupported.
+The static policy requires maintenance as allocations change and does not promise routability.
+Sources: the global-unicast registry (updated 2025-10-10),
+[IANA IPv6 address space](https://www.iana.org/assignments/ipv6-address-space/) and
+[special-purpose registry](https://www.iana.org/assignments/iana-ipv6-special-registry/), read on
 2026-10-10. A mixed public/refused DNS answer is rejected entirely before transport, including
 after redirects; there is no address filtering/fallback. One 10-second deadline covers DNS,
 redirects, headers and body; responses are limited to 2 MiB. DNS lookups cannot be
@@ -144,7 +148,9 @@ npm pack --dry-run
 Offline tests use reduced attributed HTML fixtures and injected DNS/transport/provider mocks.
 They cover JSON-LD variants and errors, search filtering, provider dispatch/defaults, enable/disable
 persistence and zero-network disabled paths, CLI text/JSON/exit codes, package entrypoint, HTTP/DNS/
-TLS/stream failures, public-address checks, redirects, response limits and timeouts. The native
+TLS/stream failures, public-address checks, redirects, response limits and timeouts. Allocation-policy tests compare
+against a separately captured IANA table, including all allocated/reserved prefix endpoints and
+both ends of every unlisted gap, plus zero-transport initial/mixed/redirect DNS cases. The native
 HTTPS adapter is also tested without sockets, including Node's single/all DNS callback forms.
 Fixture provenance is in `test/fixtures/README.md`. Tests create isolated temporary config files.
 
@@ -175,3 +181,13 @@ fixtures or touch user config. A site denial or network failure is reported, nev
 The registry aggregates enabled-provider searches, failing the command if any selected provider
 fails (no silent partial results). Retrieval selects a matching registered provider. Providers
 should have disjoint host ownership; dynamically installed plugins are deliberately out of scope.
+
+### Maintaining the address policy
+
+`src/address-policy.ts` contains the reviewed static IPv6 RIR allocation allowlist and additional
+special-purpose exclusions. To update it, inspect the linked current IANA registries; never
+auto-enable all of `2000::/3`, unlisted space, transition prefixes or IANA special allocations.
+Refresh `test/fixtures/iana-global-unicast.json` with the actual registry source/date and table,
+review each policy change against the special-purpose registry, then run all offline checks.
+The runtime never fetches these registries. New public allocations remain unsupported until
+a reviewed software update; failing closed is preferred to silently widening network access.

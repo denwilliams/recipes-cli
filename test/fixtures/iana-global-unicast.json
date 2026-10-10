@@ -1,0 +1,262 @@
+{
+  "source": "https://www.iana.org/assignments/ipv6-unicast-address-assignments/ipv6-unicast-address-assignments.xhtml",
+  "inspected": "2026-10-10",
+  "registryUpdated": "2025-10-10",
+  "entries": [
+    {
+      "prefix": "2001::/23",
+      "designation": "IANA",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:200::/23",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:400::/23",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:600::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:800::/22",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:c00::/23",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:e00::/23",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:1200::/23",
+      "designation": "LACNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:1400::/22",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:1800::/23",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:1a00::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:1c00::/22",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:2000::/19",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4000::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4200::/23",
+      "designation": "AFRINIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4400::/23",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4600::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4800::/23",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4a00::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:4c00::/23",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:5000::/20",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:8000::/19",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:a000::/20",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2001:b000::/20",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2002::/16",
+      "designation": "6to4",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2003::/18",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2400::/12",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2410::/12",
+      "designation": "APNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2600::/12",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2610::/23",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2620::/23",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2630::/12",
+      "designation": "ARIN",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2800::/12",
+      "designation": "LACNIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2a00::/12",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2a10::/12",
+      "designation": "RIPE NCC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2c00::/12",
+      "designation": "AFRINIC",
+      "status": "ALLOCATED"
+    },
+    {
+      "prefix": "2d00::/8",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "2e00::/7",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3000::/5",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3800::/6",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3c00::/7",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3e00::/8",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3f00::/9",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3f80::/10",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3fc0::/11",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3fe0::/12",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3ff0::/13",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3ff8::/14",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3ffc::/15",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3ffe::/16",
+      "designation": "IANA",
+      "status": "RESERVED"
+    },
+    {
+      "prefix": "3fff::/20",
+      "designation": "Documentation",
+      "status": "RESERVED"
+    }
+  ]
+}

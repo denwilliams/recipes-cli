@@ -196,6 +196,7 @@ test('conservative IPv6 envelope, special blocks, mapped IPv4 and strict literal
     '2620:4f:8000::1', '3ffe::1', '3fff:fff:ffff:ffff:ffff:ffff:ffff:ffff',
     '64:ff9b::808:808', '64:ff9b:1:ffff:ffff:ffff:ffff:ffff', 'feff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
     '::ffff:10.0.0.1', '::ffff:192.168.1.1', '::ffff:169.254.169.254',
+    '3fff:1000::1', '3ffd:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
     '0x08080808', '134744072', '010.0.0.1', '8.8.8',
   ]) assert.equal(isPublicAddress(address), false, address);
   for (const address of [
@@ -203,7 +204,6 @@ test('conservative IPv6 envelope, special blocks, mapped IPv4 and strict literal
     '2001:4860:4860::8888', '2606:4700::1111', '2a00:1450:4001::1',
     '2001:200::1', '2001:db7:ffff:ffff:ffff:ffff:ffff:ffff', '2001:db9::1',
     '2620:4f:7fff:ffff:ffff:ffff:ffff:ffff', '2620:4f:8001::1',
-    '3fff:1000::1', '3ffd:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
   ]) assert.equal(isPublicAddress(address), true, address);
 });
 test('public IPv6 and mapped public IPv4 still reach pinned transport', async () => {
