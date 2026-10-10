@@ -1,3 +1,6 @@
 /bin/
 *.test
 coverage.out
+
+/dist/
+__pycache__/

@@ -78,3 +78,18 @@ func TestNativeInstalledExecutable(t *testing.T) {
 		t.Fatal("malformed config overwritten")
 	}
 }
+
+func TestReleaseVersion(t *testing.T) {
+	bin := filepath.Join(t.TempDir(), "recipes")
+	const version = "v1.2.3"
+	build := exec.Command("go", "build", "-trimpath", "-buildvcs=false", "-ldflags", "-X=github.com/denwilliams/recipes-cli/internal/cli.Version="+version, "-o", bin, ".")
+	build.Env = append(os.Environ(), "GOPROXY=off", "GOSUMDB=off", "CGO_ENABLED=0")
+	if b, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("release build: %s %v", b, err)
+	}
+	cmd := exec.Command(bin, "--version")
+	cmd.Env = append(os.Environ(), "PATH=", "RECIPES_CONFIG="+filepath.Join(t.TempDir(), "missing"))
+	if b, err := cmd.CombinedOutput(); err != nil || string(b) != version+"\n" {
+		t.Fatalf("release version: %q %v", b, err)
+	}
+}

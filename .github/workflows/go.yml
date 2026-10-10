@@ -11,18 +11,26 @@ jobs:
       matrix:
         go: ['1.26.x', '1.27.x']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: ${{ matrix.go }}
           cache: true
       - run: go mod download
       - name: Formatting and module consistency
+        env:
+          GOPROXY: off
+          GOSUMDB: off
         run: |
           test -z "$(gofmt -l cmd internal tools)"
           go mod tidy
           git diff --exit-code -- go.mod go.sum
       - run: go vet ./...
+        env:
+          GOPROXY: off
+          GOSUMDB: off
       - run: go test -race ./... -count=1
         env:
           GOPROXY: 'off'
