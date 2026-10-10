@@ -40,6 +40,11 @@ class ReleaseTests(unittest.TestCase):
     def checksum(self, path):
         Path(str(path) + ".sha256").write_text(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n")
 
+    def test_packaged_docs_use_identical_checkout_line_endings(self):
+        attributes = (r.ROOT / ".gitattributes").read_text()
+        for doc in ("README.md", "LICENSE"):
+            self.assertIn(f"{doc} text eol=lf", attributes.splitlines())
+
     def test_tag_safety(self):
         for value in ("v0.0.0", "v1.2.3", "v123.456.789"):
             self.assertEqual(r.valid_tag(value), value)
