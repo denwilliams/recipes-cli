@@ -1,0 +1,32 @@
+name: Go checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.26.x', '1.27.x']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - run: go mod download
+      - name: Formatting and module consistency
+        run: |
+          test -z "$(gofmt -l cmd internal tools)"
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+      - run: go vet ./...
+      - run: go test -race ./... -count=1
+        env:
+          GOPROXY: 'off'
+          GOSUMDB: 'off'
+      - name: Native standalone build
+        run: CGO_ENABLED=0 go build -trimpath -o bin/recipes ./cmd/recipes
+      - run: bin/recipes --version
