@@ -18,6 +18,10 @@ import (
 	"github.com/denwilliams/recipes-cli/internal/recipetin"
 )
 
+// Version is overridden by the release build with -ldflags -X.
+// Unversioned source builds retain the original development version.
+var Version = "0.1.0-go"
+
 const Help = `Recipes CLI — attributed recipes from configurable providers
 
 Usage:
@@ -143,7 +147,7 @@ func execute(ctx context.Context, args []string, d Dependencies) error {
 		return err
 	}
 	if o.version {
-		_, err = io.WriteString(d.Out, "0.1.0-go\n")
+		_, err = io.WriteString(d.Out, Version+"\n")
 		return err
 	}
 	if o.provider != nil && strings.TrimSpace(*o.provider) == "" {

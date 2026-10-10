@@ -1,0 +1,157 @@
+name: Release binaries
+
+# Branch/PR runs exercise the complete pipeline without release permissions.
+# No workflow_dispatch, pull_request_target or workflow_run publication path.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Tag validation and offline release-helper tests
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+          version=v0.0.0
+          if [ "$REF_TYPE" = tag ]; then version="$REF_NAME"; fi
+          python3 .github/scripts/release.py validate-tag --tag "$version"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+  checks:
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        go: ['1.26.x', '1.27.x']
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+      - name: Download locked dependencies (setup only)
+        run: go mod download
+      - name: Offline formatting, module, vet and test gates
+        env:
+          GOPROXY: off
+          GOSUMDB: off
+        run: |
+          test -z "$(gofmt -l cmd internal tools)"
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go vet ./...
+          go test -race ./... -count=1
+
+  build:
+    needs: [validate, checks]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - run: go mod download
+      - name: Build and validate standalone archive
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: python3 .github/scripts/release.py build --tag "$VERSION" --os "$TARGET_OS" --arch "$TARGET_ARCH" --dir dist
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: recipes-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  smoke:
+    needs: [validate, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: linux, arch: amd64, runner: ubuntu-24.04, python: python3}
+          - {os: linux, arch: arm64, runner: ubuntu-24.04-arm, python: python3}
+          - {os: darwin, arch: amd64, runner: macos-15-intel, python: python3}
+          - {os: darwin, arch: arm64, runner: macos-15, python: python3}
+          - {os: windows, arch: amd64, runner: windows-2025, python: python}
+          - {os: windows, arch: arm64, runner: windows-11-arm, python: python}
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: recipes-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist
+      - name: Native offline smoke of the packaged binary (empty PATH)
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_ARCH: ${{ matrix.arch }}
+          PYTHON: ${{ matrix.python }}
+        run: '"$PYTHON" .github/scripts/release.py smoke --tag "$VERSION" --os "$TARGET_OS" --arch "$TARGET_ARCH" --dir dist'
+
+  publish:
+    needs: [validate, checks, build, smoke]
+    if: github.event_name == 'push' && github.ref_type == 'tag' && !github.event.deleted
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: recipes-*
+          path: dist
+          merge-multiple: true
+      - name: Revalidate complete collection, upload draft, then publish once
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/release.py publish --tag "$VERSION" --dir dist
